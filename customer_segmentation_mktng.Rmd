@@ -1,0 +1,413 @@
+---
+title: "Marketing analytics A 1"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+date: "2023-02-26"
+---
+# Loading required libraries
+```{r libraries}
+library(readxl)
+library(dplyr)
+library(dlookr)
+library(ggplot2)
+library(openxlsx)
+library(ggpubr)
+library (cluster)
+library(factoextra)
+
+```
+
+# setting Seed and uploading data
+
+```{r Load Data}
+set.seed(123)
+seg <- read_excel("Restaurant Data.xlsx")
+```
+
+## Summary and Descriptive Statistics
+
+```{r Descriptive Statistics}
+summary(seg)
+describe(seg)
+DQ <- diagnose(seg)
+DQ1 <- diagnose_numeric(seg)
+DQ2 <- diagnose_outlier(seg)
+```
+
+## Dealing with DQ Issues and outliers
+
+```{r Data Quality Issues}
+# removing order freq and order value outliers
+
+seg$avg_order_size[seg$avg_order_size>150] <- NA #replacing avg order size above 150 by NA
+seg$avg_order_freq[seg$avg_order_freq>20] <- NA #replacing avg order freq above 20 by NA
+seg <- na.omit(seg) #dropping rows with NA values
+
+#Creating calculated field for Occupation
+
+seg$Occupation <- rep(0, dim(seg)[1]) #creating a new column with 0 values
+seg$Occupation [seg$Health ==1]<- 1 # replacing 0 with new values according to occupation code columns
+seg$Occupation [seg$Finc ==1]<- 2
+seg$Occupation [seg$Sales ==1]<- 3
+seg$Occupation [seg$Advt ==1]<- 4 
+seg$Occupation [seg$Edu ==1]<- 5 
+seg$Occupation [seg$Cons ==1]<- 6 
+seg$Occupation [seg$Eng ==1]<- 7 
+seg$Occupation [seg$Tech ==1]<- 8
+seg$Occupation [seg$Retail ==1]<- 9
+seg$Occupation [seg$SMB ==1]<- 10
+
+summary(seg)
+dim(seg)
+```
+# Subsetting the bases variable for clustering
+```{r Data subset for clustering}
+new_seg <- seg[2:15]
+   #choosing variable 2 to 15 (bases variables) from main data set
+```
+
+
+
+## CLUSTERING METHODS
+#HIERARCHICAL CLUSTERING
+# Hierarchical Clustering using Complete Linkage Method
+
+```{r Hierarchical clustering- Complete Linkage}
+set.seed(123)
+hc.complete <- hclust(dist(scale(new_seg)), method = "complete") 
+
+x1 <- c(1:10)
+sort_height1 <- sort(hc.complete$height, decreasing=TRUE)
+y1 <- sort_height1[1:10]
+plot(x1,y1, xlab="number of clusters", ylab="Height", main= "Elbow plot using Complete linkage"); lines(x1,y1,col="blue")
+
+#create a dendrogram of hierarchical cluster
+fviz_dend(x=hc.complete, cex=0.7, lwd=0.7, k=4, k_colors = c("red","green","blue","magenta"), reg=T,
+          rect_border ="grey",rect_fill=F )
+
+hc.complete1 <- cutree(hc.complete,4) #cutting hierarchical cluster at 4th level from top bottom
+table(hc.complete1) #shows number of observations in each cluster
+```
+
+# Hierarchical Clustering using Single Linkage Method
+```{r Hierarchical clustering- Single Linkage}
+set.seed(123)
+hc.single <- hclust(dist(scale(new_seg)), method = "single")
+
+x2 <- c(1:10)
+sort_height2 <- sort(hc.single$height, decreasing=TRUE)
+y2 <- sort_height2[1:10]
+plot(x2,y2,xlab="number of clusters", ylab="Height", main= "Elbow plot using Single linkage"); lines(x2,y2,col="blue")
+
+#create a dendrogram of hierarchical cluster
+fviz_dend(x=hc.single, cex=0.7, lwd=0.7, k= 6, k_colors = c("red","green","blue","magenta","orange","purple"), reg=T,
+          rect_border ="grey",rect_fill=F )
+
+hc.single1 <- cutree(hc.single,6)
+table(hc.single1)
+```
+
+# Hierarchical Clustering using Average Linkage Method
+```{r Hierarchical clustering- Average Linkage}
+set.seed(123)
+hc.average <- hclust(dist(scale(new_seg)), method = "average")
+
+x3 <- c(1:10)
+sort_height3 <- sort(hc.average$height, decreasing=TRUE)
+y3 <- sort_height3[1:10]
+plot(x3,y3,xlab="number of clusters", ylab="Height", main= "Elbow plot using Average linkage"); lines(x3,y3,col="blue")
+
+#create a dendrogram of hierarchical cluster
+fviz_dend(x=hc.average, cex=0.7, lwd=0.7, k=3, k_colors = c("red","green","blue"), reg=T,
+          rect_border ="grey",rect_fill=F )
+
+hc.average1 <- cutree(hc.average,3)
+table(hc.average1)
+```
+
+# Hierarchical Clustering using Centroid Linkage Method
+
+```{r Hierarchical clustering- Centroid Linkage}
+set.seed(123)
+hc.centroid <- hclust(dist(scale(new_seg)), method = "centroid")
+
+x4 <- c(1:10)
+sort_height4 <- sort(hc.centroid$height, decreasing=TRUE)
+y4 <- sort_height4[1:10]
+plot(x4,y4,xlab="number of clusters", ylab="Height", main= "Elbow plot using Centroid linkage"); lines(x4,y4,col="blue")
+
+#create a dendrogram of hierarchical cluster
+fviz_dend(x=hc.centroid, cex=0.7, lwd=0.7, k=5, k_colors = c("red","green","blue","magenta","orange"), reg=T,
+          rect_border ="grey",rect_fill=F )
+
+hc.centroid1 <- cutree(hc.centroid,5)
+table(hc.centroid1)
+```
+
+
+# Hierarchical Clustering using Ward Linkage Method
+```{r Hierarchical clustering- Wards Linkage}
+set.seed(123)
+hc.ward <- hclust(dist(scale(new_seg)), method = "ward")
+
+x5 <- c(1:10)
+sort_height5 <- sort(hc.ward$height, decreasing=TRUE)
+y5 <- sort_height5[1:10]
+plot(x5,y5, xlab="clusters", ylab="height", main="Elbow plot using Ward's method"); lines(x5,y5,col="blue")
+
+#create a dendrogram of hierarchical cluster
+fviz_dend(x=hc.ward, cex=0.7, lwd=0.7, k=4, k_colors = c("red","green","blue","magenta"), reg=T,
+          rect_border ="grey",rect_fill=F )
+
+hc.ward1 <- cutree(hc.ward,4)
+table(hc.ward1)
+```
+# elbow plot from above hierarchical clustering using different linkage methods mostly point out at 3, 4,5,6 clusters to be ideal number of clusters
+
+  # K MEANS CLUSTERING
+# for 3 clusters
+```{r K means clustering 3 clusters }
+set.seed(123)
+new_seg1 <- scale(new_seg) #scaling data for standardisation
+
+# k means algorithm for k =3
+seg_kmeans1 <- kmeans(new_seg1,3, nstart=50)
+seg_kmeans1
+
+print("Centers")
+seg_kmeans1$centers
+print("total ss")
+seg_kmeans1$totss
+print("within ss")
+seg_kmeans1$withinss
+print("total within ss")
+seg_kmeans1$tot.withinss
+print("between ss")
+seg_kmeans1$betweenss
+print("size")
+seg_kmeans1$size
+print("iter")
+seg_kmeans1$iter
+
+segment_3c= seg_kmeans1$cluster #segregating cluster column from segmented dataset
+seg1 <- seg
+seg1 <- cbind(seg1,segment_3c) #binding new cluster column to original data set
+
+a1 <- aggregate(new_seg, by=list(cluster=seg_kmeans1$cluster), mean) #calculating mean of clusters against all variables on unscaled data set
+
+```
+
+# for 4 clusters
+
+```{r K means clustering 4 clusters }
+set.seed(123)
+
+#k means algorithm for k =4
+seg_kmeans2 <- kmeans(new_seg1,4, nstart=50)
+seg_kmeans2
+
+print("Centers")
+seg_kmeans2$centers
+print("total ss")
+seg_kmeans2$totss
+print("within ss")
+seg_kmeans2$withinss
+print("total within ss")
+seg_kmeans2$tot.withinss
+print("between ss")
+seg_kmeans2$betweenss
+print("size")
+seg_kmeans2$size
+print("iter")
+seg_kmeans2$iter
+
+segment_4c= seg_kmeans2$cluster
+
+seg1 <- cbind(seg1,segment_4c)
+
+a2 <- aggregate(new_seg, by=list(cluster=seg_kmeans2$cluster), mean)
+
+```
+
+# for 5 clusters
+```{r K means clustering 5 clusters }
+set.seed(123)
+
+#k means algorithm for k =5
+seg_kmeans3 <- kmeans(new_seg1,5, nstart=50)
+seg_kmeans3
+
+print("Centers")
+seg_kmeans3$centers
+print("total ss")
+seg_kmeans3$totss
+print("within ss")
+seg_kmeans3$withinss
+print("total within ss")
+seg_kmeans3$tot.withinss
+print("between ss")
+seg_kmeans3$betweenss
+print("size")
+seg_kmeans3$size
+print("iter")
+seg_kmeans3$iter
+
+segment_5c= seg_kmeans3$cluster
+
+seg1 <- cbind(seg1,segment_5c)
+
+a3 <- aggregate(new_seg, by=list(cluster=seg_kmeans3$cluster), mean)
+
+```
+
+# for 6 clusters
+```{r K means clustering 6 clusters }
+set.seed(123)
+
+# k means algorithm for k =6
+seg_kmeans4 <- kmeans(new_seg1,6, nstart=50)
+seg_kmeans4
+
+print("Centers")
+seg_kmeans4$centers
+print("total ss")
+seg_kmeans4$totss
+print("within ss")
+seg_kmeans4$withinss
+print("total within ss")
+seg_kmeans4$tot.withinss
+print("between ss")
+seg_kmeans4$betweenss
+print("size")
+seg_kmeans4$size
+print("iter")
+seg_kmeans4$iter
+
+segment_6c= seg_kmeans4$cluster
+
+seg1 <- cbind(seg1,segment_6c)
+
+a4 <- aggregate(new_seg, by=list(cluster=seg_kmeans4$cluster), mean)
+```
+
+
+## VISUALISATIONS
+
+# Silhouette plot & width  for 3 clusters
+```{r}
+sil1 <- silhouette(segment_3c, dist(new_seg1))
+fviz_silhouette(sil1)
+```
+
+# Silhouette plot & width for 4 clusters
+```{r}
+sil2 <- silhouette(segment_4c, dist(new_seg1))
+fviz_silhouette(sil2)
+```
+
+# Silhouette plot & width for 5 clusters
+```{r}
+sil3 <- silhouette(segment_5c, dist(new_seg1))
+fviz_silhouette(sil3)
+```
+
+# Silhouette plot & width for 6 clusters
+```{r}
+sil4 <- silhouette(segment_6c, dist(new_seg1))
+fviz_silhouette(sil4)
+```
+
+
+# Cluster Plots 
+```{r}
+# for 3 clusters
+fviz_cluster(seg_kmeans1, new_seg1,
+             palette = "Set2" , 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw()
+)
+# for 4 clusters
+fviz_cluster(seg_kmeans2, new_seg1,
+             palette = "Set3" , 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw()
+)
+# for 5 clusters
+fviz_cluster(seg_kmeans3, new_seg1,
+             palette = "Set4" , 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw()
+)
+# for 6 clusters
+fviz_cluster(seg_kmeans4, new_seg1,
+             palette = "Set5" , 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw()
+)
+
+```
+
+#silhouette score plot against number of clusters
+
+```{r} 
+# creating a function to calculate silhouette score for clusters ranging from 2 to 10
+silhouette_score <- function(k){set.seed(123)
+  km <- kmeans(new_seg1, centers=k, nstart=50) #runs k means algorithm for every value of k iterating it 50 times
+  ss <- silhouette(km$cluster, dist(new_seg1)) # calculating silhouette score for each observation
+  mean(ss[,2]) # calculating mean of silhouette scores calculated above
+}
+k <- 2:5  # assigning number of clusters to k to be used in above function
+avg_sil <- sapply(k,silhouette_score) #binding silhouette score against cluster numbers
+avg_sil[2:4] # to display silhouette score of clusters 3,4 ,5 & 6
+plot(k, type='b', avg_sil, xlab='Number of clusters', ylab='Average Silhouette Scores', frame=FALSE) # plotting average silhouette score against number of clusters.
+
+```
+
+#Linear Discriminant Analysis
+```{r}
+library(MASS)
+
+#Discriminant Analysis 
+
+lda.fit <- lda(segment_4c~ Education + Gender + Age + Income + zip_code + Occupation, data = seg1)
+lda.fit
+
+#Calculating the discriminant score - Predicting the segments based on discriminant score
+
+lda.pred <- predict(lda.fit, seg1)
+names(lda.pred)
+seg1$lda.class<-lda.pred$class
+tclass<-table(seg1$segment_3c, seg1$lda.class)
+tclass
+sum(diag(tclass))/nrow(seg1)#accuracy of the confusion matrix
+```
+
+
+```{r}
+set.seed(123)
+fviz_nbclust (new_seg1, kmeans, method = "wss") + geom_vline(xintercept = 4, linetype = 2)
+fviz_nbclust (new_seg1, kmeans, method = "silhouette") + geom_vline(xintercept = 4, linetype = 2)
+fviz_nbclust (new_seg1, kmeans, method = "gap_stat") + geom_vline(xintercept = 4, linetype = 2)
+```
+
+# write excel back to system
+```{r}
+segnew <- seg[-(16:25)]  #dropping columns not required
+segnew <- cbind(segnew,segment_4c)
+
+write.xlsx(segnew, '/Users/jyotismac/Documents/BUSINESS ANALYTICS/DATA SETS')
+write.xlsx(a2, '/Users/jyotismac/Documents/BUSINESS ANALYTICS/DATA SETS')
+
+
+```
+# to rknit the markdown file
+```{r}
+
+```
+
