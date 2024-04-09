@@ -1,10 +1,6 @@
 ---
-title: "Marketing analytics A 1"
-output:
-  word_document: default
-  pdf_document: default
-  html_document: default
-date: "2023-02-26"
+title: "Customer Segmentation"
+
 ---
 # Loading required libraries
 ```{r libraries}
@@ -400,14 +396,6 @@ fviz_nbclust (new_seg1, kmeans, method = "gap_stat") + geom_vline(xintercept = 4
 ```{r}
 segnew <- seg[-(16:25)]  #dropping columns not required
 segnew <- cbind(segnew,segment_4c)
-
-write.xlsx(segnew, '/Users/jyotismac/Documents/BUSINESS ANALYTICS/DATA SETS')
-write.xlsx(a2, '/Users/jyotismac/Documents/BUSINESS ANALYTICS/DATA SETS')
-
-
-```
-# to rknit the markdown file
-```{r}
 
 ```
 
